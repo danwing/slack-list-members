@@ -6,7 +6,14 @@
 # September 2019, Dan Wing
 #
 
+import sys
+if sys.version_info.major < 3:
+    sys.exit ("need Python 3, running " + str(sys.version_info.major) + 
+              "." + str(sys.version_info.minor))
+
 import os, slack, argparse, sys, urllib.parse
+
+
 MAX_PAGINATION = 999
 
 ap = argparse.ArgumentParser(
