@@ -6,3 +6,8 @@ List members of a Slack channel by alias, email, name, and title
 [...]
 dwing        dwing@employees.org                 Dan Wing                       security, networking, ☕ ð⛷️   
 ```
+# Prerequisites
+
+Python package 'slack', install with 'pip install slack'
+
+

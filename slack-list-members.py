@@ -11,11 +11,12 @@ if sys.version_info.major < 3:
     sys.exit ("need Python 3, running " + str(sys.version_info.major) + 
               "." + str(sys.version_info.minor))
 
-import os, slack, argparse, sys, urllib.parse
-
-
+import os, slack, argparse, urllib.parse, logging
 MAX_PAGINATION = 999
 
+#-----
+#
+# process CLI arguments
 ap = argparse.ArgumentParser(
     description=
     'List members of a Slack channel by alias, name, and email address')
@@ -37,8 +38,8 @@ ap.add_argument('channel_name', nargs=1, help='Slack channel name')
 ap.add_argument('-V', action='version', version='%(prog)s 1.0')
 args = vars(ap.parse_args())
 
-DEBUG = args['debug']
 CHANNEL_NAME = args['channel_name'][0]
+if args['debug']: logging.basicConfig(level=getattr(logging, "DEBUG", None))
 
 # get API token from environment variable and allow -t to override
 SLACK_API_TOKEN = os.environ.get('SLACK_API_TOKEN')
@@ -50,14 +51,13 @@ if not SLACK_API_TOKEN:
 generate API token at https://api.slack.com/custom-integrations/legacy-tokens')
 
 
-client = slack.WebClient(SLACK_API_TOKEN)
-
 #------
 #
 # fetch all channels this API token belongs to
+client = slack.WebClient(SLACK_API_TOKEN)
+
 conversations = client.users_conversations(
     types='private_channel,public_channel')
-if DEBUG: print(conversations)
 
 for pagination in range(MAX_PAGINATION):
     #-----
@@ -65,7 +65,7 @@ for pagination in range(MAX_PAGINATION):
     # translate human-readable channel name into Slack's channel-id
     channel_id = None
     for c in conversations['channels']:
-        if DEBUG: print(c['name'])
+        logging.debug(c['name'])
         if c['name'] == CHANNEL_NAME:
             channel_id = c['id']
             break
@@ -82,26 +82,28 @@ if not channel_id:
     sys.exit('channel \"' + CHANNEL_NAME +
              '\" not among this Slack API Token\'s list of channels')
 
-    if DEBUG: print('Channel ' + CHANNEL_NAME + ' has id ' + channel_id)
+logging.debug('Channel ' + CHANNEL_NAME + ' has id ' + channel_id)
+
 
 #------
 #
 # get members of that Channel ID
 channel_info = client.conversations_members(channel=channel_id)
-if DEBUG: print(channel_info)
+logging.debug(channel_info)
 
 for pagination in range(MAX_PAGINATION):
 
     members = channel_info['members']
-    if DEBUG: print(members)
+    logging.debug(members)
 
     #------
     #
     # retrieve details for each member
     for member in members:
         user_info = client.users_info(user=member)
-        if DEBUG: print(user_info)
-        if user_info['user']['deleted']: continue
+        logging.debug(user_info)
+        if user_info['user']['deleted'] or user_info['user']['is_bot']: continue
+
         print('{!s:12} {!s:<35} {!s:<30} {!s:<30}'.format(
             user_info.get('user', {}).get('profile', {}).get('display_name'),
             user_info.get('user', {}).get('profile', {}).get('email'),
