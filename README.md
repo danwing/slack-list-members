@@ -8,7 +8,7 @@ dwing        dwing@employees.org                 Dan Wing                       
 ```
 # Prerequisites
 
-Python packages 'slack' and 'slackclient'
+Python package 'slackclient'.
 
 
 
